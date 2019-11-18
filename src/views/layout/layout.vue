@@ -1,339 +1,149 @@
+<style scoped lang='scss'>
+.layout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  .layout-top {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: scroll;
+  }
+  .layout-bottom {
+    width: 375px;
+    height: 40px;
+    padding-top: 7px;
+    padding-bottom: 2px;
+    display: flex;
+    justify-content: space-around;
+    background-color: #fff;
+    .layout-bottom-box {
+      width: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      color: rgba(153, 153, 153, 1);
+      font-size: 14px;
+      .layout-bottom-box-img {
+        height: 23.1px;
+      }
+      .active {
+        color: rgba(247, 96, 72, 1);
+      }
+      .home {
+        img {
+          width: 22.74px;
+          height: 23.1px;
+        }
+      }
+      .finca {
+        img {
+          width: 19px;
+          height: 19px;
+        }
+      }
+      .car {
+        img {
+          width: 22.87px;
+          height: 21px;
+        }
+      }
+      .mine {
+        img {
+          width: 21px;
+          height: 21px;
+        }
+      }
+    }
+  }
+}
+</style>
 <template>
-  <div class="bottom">
-    <div class="bottom-top" ref="top"></div>
-    <div class="bottom-bottom" ref="bottom">
-    <div
-      :class="`${item.class}${item.active?' on':''}`"
-      v-for="(item,index) in menus"
-      :key="index"
-      v-tap
-      @click="checkMenu(index)"
-    >
-      <img :src="item.active?item.activeIcon:item.icon" alt />
-      <div class="bottom-text">{{item.name}}</div>
+  <div class="layout">
+    <div class="layout-top">
+      <home v-if="navList[0].active" />
+      <mine v-if="navList[3].active" />
+      <car v-if="navList[2].active" />
+      <bazaar v-if="navList[1].active" />
+    </div>
+    <div class="layout-bottom">
+      <div
+        class="layout-bottom-box"
+        v-for="(item,index) in navList"
+        :key="index"
+        @click="cutDate(index)"
+      >
+        <div
+          class="layout-bottom-box-img"
+          :class="{'home':item.class==='home','finca':item.class==='finca','car':item.class==='car','mine':item.class==='mine'}"
+        >
+          <img :src="item.active?item.urlactive:item.url" alt />
+        </div>
+        <div class="layout-bottom-box-text" :class="{'active':item.active}">{{item.name}}</div>
+      </div>
     </div>
   </div>
-  </div>
 </template>
-
 <script>
+import Home from '../home/home'
+import car from '../car/car'
+import mine from '../mine/mine'
+import bazaar from '../bazaar/bazaar'
 export default {
   data () {
     return {
-      menus: [
+      navList: [
         {
           name: '首页',
           active: true,
           class: 'home',
-          icon: require('./images/tab_index.png'),
-          activeIcon: require('./images/tab_index_on.png'),
-          url: '/index.html#/home',
-          sub: null
+          url: require('./images/home.png'),
+          urlactive: require('./images/home_active.png')
         },
         {
-          name: '爆款',
+          name: '庄园',
           active: false,
-          class: 'hot',
-          icon: require('./images/tab_hot.png'),
-          activeIcon: require('./images/tab_hot_on.png'),
-          url: '/index.html#/hot',
-          sub: null
+          class: 'finca',
+          url: require('./images/finca.png'),
+          urlactive: require('./images/finca_active.png')
         },
         {
-          name: '权益',
+          name: '购物车',
           active: false,
-          class: 'right',
-          icon: require('./images/tab_right.png'),
-          activeIcon: require('./images/tab_right_on.png'),
-          url: '/index.html#/right',
-          sub: null
+          class: 'car',
+          url: require('./images/car.png'),
+          urlactive: require('./images/car_active.png')
         },
         {
           name: '我的',
           active: false,
           class: 'mine',
-          icon: require('./images/tab_mine.png'),
-          activeIcon: require('./images/tab_mine_on.png'),
-          url: '/index.html#/mine',
-          sub: null
+          url: require('./images/mine.png'),
+          urlactive: require('./images/mine_active.png')
         }
-      ],
-      currentWB: {}
-    }
-  },
-  mounted () {
-    if (window.plus) {
-      this.createWebView()
-    } else {
-      document.addEventListener('plusready', this.createWebView, false)
+      ]
     }
   },
   methods: {
-    createWebView () {
-      let bottom = this.$refs.bottom.clientHeight
-      // 关闭其余webview
-      let all = window.plus.webview.all()
-      this.currentWB = window.plus.webview.currentWebview()
-      let safeBottom = this.currentWB.getSafeAreaInsets().deviceBottom
-      if (all.length > 1) {
-        for (let i = 0; i < all.length; i++) {
-          if (all[i] !== this.currentWB) {
-            all[i].close('none')
-          }
-        }
-      }
-      // 创建home页面webview
-      this.menus[0].sub = window.plus.webview.create(this.menus[0].url, this.menus[0].class, {
-        top: '0',
-        bottom: `${bottom + safeBottom}px`,
-        backgroundColorTop: '#fb2c68',
-        bounce: 'vertical'
-      })
-      this.currentWB.append(this.menus[0].sub)
-      window.plus.navigator.setStatusBarBackground('#fb2c68')
-      window.plus.navigator.setStatusBarStyle('light')
-      let islogin = this.parseJSON(this.$route.query.islogin)
-      if (islogin !== true) {
-        this.checkUpdate()
-      }
-      document.addEventListener('resume', this.awakenApp, false)
-    },
-    checkMenu (index) {
-      let bottom = this.$refs.bottom.clientHeight
-      let safeBottom = this.currentWB.getSafeAreaInsets().deviceBottom
-      // 当前webview切换到当前webview不进行逻辑变更
-      if (this.menus[index].sub === this.activeMenu[0].sub) {
-        return
-      }
-      // 检测webview是否已创建，动态按需创建webview
-      if (this.menus[index].sub) {
-        window.plus.webview.hide(this.activeMenu[0].sub)
-        window.plus.webview.show(this.menus[index].sub)
-        if (this.menus[index].class === 'mine' || this.menus[index].class === 'right') {
-          this.menus[index].sub.evalJS('update()')
-        }
-      } else {
-        window.plus.webview.hide(this.activeMenu[0].sub)
-        this.menus[index].sub = window.plus.webview.create(this.menus[index].url, this.menus[index].class, {
-          top: '0px',
-          bottom: `${bottom + safeBottom}px`,
-          backgroundColorTop: '#fb2c68'
-        })
-        this.currentWB.append(this.menus[index].sub)
-      }
-      this.menus = this.menus.map(item => {
+    cutDate (index) {
+      this.navList = this.navList.map(item => {
         item.active = false
         return item
       })
-      this.menus[index].active = true
-    },
-    checkUpdate () {
-      let u = navigator.userAgent
-      let isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1
-      // 检测是否需要升级
-      this.$http('GET', this.api.appVersion, {
-        platform: isAndroid ? 'android' : 'ios'
-      }).then(res => {
-        if (res.data.success === true) {
-          let appVersion = res.data.model.version
-          if (window.plus) {
-            if (this.checkVersion(window.plus.runtime.version, appVersion)) {
-              window.plus.nativeUI.confirm('发现新版本，是否升级', e => {
-                if (e.index === 0) {
-                  if (isAndroid) {
-                    if (res.data.model.force === true) {
-                      location.href = 'https://a.app.qq.com/o/simple.jsp?pkgname=biz.prices&fromcase=40003'
-                    } else {
-                      this.createWB('https://a.app.qq.com/o/simple.jsp?pkgname=biz.prices&fromcase=40003', 'download', '下载')
-                    }
-                  } else {
-                    window.plus.runtime.openURL(res.data.model.downloadUrl)
-                  }
-                } else {
-                  if (res.data.model.force === true) {
-                    window.plus.runtime.quiet()
-                  }
-                }
-              })
-            }
-          } else {
-            document.addEventListener('plusready', () => {
-              if (this.checkVersion(window.plus.runtime.version, appVersion)) {
-                window.plus.nativeUI.confirm('发现新版本，是否升级', e => {
-                  if (e.index === 0) {
-                    if (isAndroid) {
-                      if (res.data.model.force === true) {
-                        location.href = 'https://a.app.qq.com/o/simple.jsp?pkgname=biz.prices&fromcase=40003'
-                      } else {
-                        this.createWB('https://a.app.qq.com/o/simple.jsp?pkgname=biz.prices&fromcase=40003', 'download', '下载')
-                      }
-                    } else {
-                      window.plus.runtime.openURL(res.data.model.downloadUrl)
-                    }
-                  } else {
-                    if (res.data.model.force === true) {
-                      window.plus.runtime.quiet()
-                    }
-                  }
-                })
-              }
-            })
-          }
-        }
-      })
-    },
-    checkVersion (oldVersion, newVersion) {
-      // 判断版本号，是否更新
-      let arr1 = oldVersion.split('.')
-      let arr2 = newVersion.split('.')
-      let result = false
-      for (let i = 0; i < arr1.length; i++) {
-        if (Number(arr1[i]) < Number(arr2[i])) {
-          if (i > 1) {
-            if (Number(arr1[i - 1]) > Number(arr2[i - 1])) {
-              result = false
-            } else {
-              result = true
-              break
-            }
-          } else {
-            result = true
-            break
-          }
-        }
-      }
-      return result
-    },
-    awakenApp (flag) {
-      // 唤起App
-      let all = window.plus.webview.all()
-      if (all.length - this.createdMenu.length === 1) {
-        this.activeMenu[0].sub.evalJS('showSearch()')
-      } else {
-        all[all.length - 1].evalJS('showSearch()')
-      }
+      this.navList[index].active = true
     }
   },
-  computed: {
-    activeMenu () {
-      return this.menus.filter((item) => {
-        return item.active
-      })
-    },
-    createdMenu () {
-      return this.menus.filter((item) => {
-        return item.sub !== null
-      })
-    }
+  components: {
+    Home,
+    mine,
+    car,
+    bazaar
   }
 }
 </script>
-
-<style lang="scss" scoped>
-.bottom {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-.bottom-top {
-  flex: 1;
-}
-.bottom-bottom {
-  height: 50px;
-  width: 375px;
-  box-sizing: border-box;
-  border-top: solid 1px rgba(231, 231, 231, 1);
-  background-color: rgba(255, 255, 255, 1);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  text-align: center;
-  .bottom-text {
-    font-family: "PingFangSC-Regular";
-    font-size: 9px;
-    line-height: 12px;
-    color: rgba(153, 153, 153, 1);
-  }
-  div {
-    flex: 1;
-  }
-  .home {
-    img {
-      margin-top: 9px;
-      width: 21px;
-      height: 21px;
-    }
-    &.on {
-      .bottom-text {
-        color: rgba(251, 44, 104, 1);
-      }
-      img {
-        animation: checkMenu 300ms ease-in-out;
-      }
-    }
-  }
-  .hot {
-    img {
-      margin-top: 9px;
-      width: 21px;
-      height: 20px;
-    }
-    &.on {
-      .bottom-text {
-        color: rgba(251, 44, 104, 1);
-      }
-      img {
-        animation: checkMenu 300ms ease-in-out;
-      }
-    }
-  }
-  .right {
-    img {
-      margin-top: 9px;
-      width: 21px;
-      height: 21px;
-    }
-    &.on {
-      .bottom-text {
-        color: rgba(251, 44, 104, 1);
-      }
-      img {
-        animation: checkMenu 300ms ease-in-out;
-      }
-    }
-  }
-  .mine {
-    img {
-      margin-top: 9px;
-      width: 28px;
-      height: 19px;
-    }
-    &.on {
-      .bottom-text {
-        color: rgba(251, 44, 104, 1);
-      }
-      img {
-        animation: checkMenu 300ms ease-in-out;
-      }
-    }
-  }
-}
-@keyframes checkMenu {
-  0% {
-    transform: scale(0.8) rotate(0);
-  }
-  33% {
-    transform: scale(1.2) rotate(-10deg);
-  }
-  50% {
-    transform: scale(1.4) rotate(0);
-  }
-  66% {
-    transform: scale(1.2) rotate(10deg);
-  }
-  100% {
-    transform: scale(1) rotate(0);
-  }
-}
-</style>
