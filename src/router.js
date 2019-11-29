@@ -8,11 +8,11 @@ export default new Router({
   routes: [
     {
       path: '/',
-      redirect: '/layout'
+      redirect: '/Layout'
     },
     {
-      path: '/layout',
-      name: 'layout',
+      path: '/Layout',
+      name: 'Layout',
       component: Layout
     },
     {
@@ -26,9 +26,9 @@ export default new Router({
       component: () => import('@/views/home/home.vue')
     },
     {
-      path: '/bazaar',
-      name: 'bazaar',
-      component: () => import('@/views/bazaar/bazaar.vue')
+      path: '/finca',
+      name: 'finca',
+      component: () => import('@/views/finca/finca.vue')
     },
     {
       path: '/car',
@@ -39,6 +39,26 @@ export default new Router({
       path: '/mine',
       name: 'mine',
       component: () => import('@/views/mine/mine.vue')
+    },
+    {
+      path: '/mui',
+      name: 'mui',
+      component: () => import('@/views/mui/mui.vue')
+    },
+    {
+      path: '/yesterday',
+      name: 'yesterday',
+      component: () => import('@/views/day/yesterday.vue')
+    },
+    {
+      path: '/yesterday',
+      name: 'yesterday',
+      component: () => import('@/views/day/today.vue')
+    },
+    {
+      path: '/yesterday',
+      name: 'yesterday',
+      component: () => import('@/views/day/tomorrow.vue')
     }
   ]
 })

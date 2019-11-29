@@ -3,7 +3,6 @@
   .home-title {
     width: 375px;
     height: 92px;
-    overflow: hidden;
     background: linear-gradient(
       136deg,
       rgba(231, 95, 52, 1) 0%,

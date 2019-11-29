@@ -6,7 +6,6 @@
     height: 157px;
     background: url("./images/mine-bg.png") no-repeat;
     background-size: 375px 157px;
-    overflow: hidden;
   }
   .mine-title {
     width: 355px;

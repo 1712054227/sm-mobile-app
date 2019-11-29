@@ -67,12 +67,12 @@
 <template>
   <div class="layout">
     <div class="layout-top">
-      <home v-if="navList[0].active" />
+      <!-- <home v-if="navList[0].active" />
       <mine v-if="navList[3].active" />
       <car v-if="navList[2].active" />
-      <bazaar v-if="navList[1].active" />
+      <bazaar v-if="navList[1].active" />-->
     </div>
-    <div class="layout-bottom">
+    <div class="layout-bottom" ref="bottom">
       <div
         class="layout-bottom-box"
         v-for="(item,index) in navList"
@@ -83,7 +83,7 @@
           class="layout-bottom-box-img"
           :class="{'home':item.class==='home','finca':item.class==='finca','car':item.class==='car','mine':item.class==='mine'}"
         >
-          <img :src="item.active?item.urlactive:item.url" alt />
+          <img :src="item.active?item.urlactive:item.img" alt />
         </div>
         <div class="layout-bottom-box-text" :class="{'active':item.active}">{{item.name}}</div>
       </div>
@@ -91,10 +91,10 @@
   </div>
 </template>
 <script>
-import Home from '../home/home'
-import car from '../car/car'
-import mine from '../mine/mine'
-import bazaar from '../bazaar/bazaar'
+// import Home from '../home/home'
+// import car from '../car/car'
+// import mine from '../mine/mine'
+// import bazaar from '../bazaar/bazaar'
 export default {
   data () {
     return {
@@ -103,35 +103,92 @@ export default {
           name: '首页',
           active: true,
           class: 'home',
-          url: require('./images/home.png'),
-          urlactive: require('./images/home_active.png')
+          img: require('./images/home.png'),
+          urlactive: require('./images/home_active.png'),
+          url: '/index.html#/home',
+          sub: null
         },
         {
           name: '庄园',
           active: false,
           class: 'finca',
-          url: require('./images/finca.png'),
-          urlactive: require('./images/finca_active.png')
+          img: require('./images/finca.png'),
+          urlactive: require('./images/finca_active.png'),
+          url: '/index.html#/finca',
+          sub: null
         },
         {
           name: '购物车',
           active: false,
           class: 'car',
-          url: require('./images/car.png'),
-          urlactive: require('./images/car_active.png')
+          img: require('./images/car.png'),
+          urlactive: require('./images/car_active.png'),
+          url: '/index.html#/car',
+          sub: null
         },
         {
           name: '我的',
           active: false,
           class: 'mine',
-          url: require('./images/mine.png'),
-          urlactive: require('./images/mine_active.png')
+          img: require('./images/mine.png'),
+          urlactive: require('./images/mine_active.png'),
+          url: '/index.html#/mine',
+          sub: null
         }
-      ]
+      ],
+      currentWB: {}
     }
   },
+  created () {
+    if (window.plus) {
+      this.plusReady()
+    } else {
+      document.addEventListener('plusready', this.plusReady, false)
+    }
+  },
+  mounted () { },
   methods: {
+    plusReady () {
+      this.currentWB = window.plus.webview.currentWebview()
+      let bottom = this.$refs.bottom.clientHeight
+      let safeBottom = this.currentWB.getSafeAreaInsets().deviceBottom
+      // 关闭其余webview
+      let all = window.plus.webview.all()
+      if (all.length > 1) {
+        for (let i = 0; i < all.length; i++) {
+          if (all[i] !== this.currentWB) {
+            all[i].close('none')
+          }
+        }
+      }
+      // 创建home页面webview
+      this.navList[0].sub = window.plus.webview.create(this.navList[0].url, this.navList[0].class, {
+        top: '0px',
+        bottom: `${bottom + safeBottom}px`
+      })
+      this.currentWB.append(this.navList[0].sub)
+    },
+
     cutDate (index) {
+      let bottom = this.$refs.bottom.clientHeight
+      let safeBottom = this.currentWB.getSafeAreaInsets().deviceBottom
+      // 当前webview切换到当前webview不进行逻辑变更
+      if (this.navList[index].sub === this.activeMenu[0].sub) {
+        return
+      }
+      // 检测webview是否已创建，动态按需创建webview
+      if (this.navList[index].sub) {
+        window.plus.webview.hide(this.activeMenu[0].sub)
+        window.plus.webview.show(this.navList[index].sub)
+      } else {
+        window.plus.webview.hide(this.activeMenu[0].sub)
+        this.navList[index].sub = window.plus.webview.create(this.navList[index].url, this.navList[index].class, {
+          top: '0px',
+          bottom: `${bottom + safeBottom}px`
+        })
+        this.currentWB.append(this.navList[index].sub)
+      }
+
       this.navList = this.navList.map(item => {
         item.active = false
         return item
@@ -139,11 +196,12 @@ export default {
       this.navList[index].active = true
     }
   },
-  components: {
-    Home,
-    mine,
-    car,
-    bazaar
+  computed: {
+    activeMenu () {
+      return this.navList.filter((item) => {
+        return item.active
+      })
+    }
   }
 }
 </script>

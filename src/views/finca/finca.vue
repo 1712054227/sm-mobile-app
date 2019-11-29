@@ -370,7 +370,6 @@ export default {
   },
   methods: {
     scrollListen () {
-      console.log(this.$refs.wai.scrollTop)
       if (this.$refs.wai.scrollTop >= 300) {
         this.scro = true
       } else {

@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  overflow: hidden;
+  overflow: scroll;
 }
 </style>
 
